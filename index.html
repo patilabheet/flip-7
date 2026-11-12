@@ -1,0 +1,1324 @@
+<!doctype html><!--sk-->
+<html lang="en"><!--sk-->
+<head><!--sk-->
+<meta charset="utf-8"><!--sk-->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><!--sk-->
+<title>Flip 7 Table</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&family=Big+Shoulders+Display:wght@800;900&family=Bungee&display=swap">
+<style>
+:root {
+  /* Layout: the game box as a tabletop. Turquoise ground, navy outlines, cream art-deco cards.
+     A spotlight shows the card just flipped; player mats sit in a responsive grid; a navy action bar docks at the bottom. */
+  --aqua: #5cc6ca;
+  --aqua-hi: #c6f1ec;
+  --aqua-deep: #3ea7af;
+  --navy: #1f2a5a;
+  --navy-deep: #111a40;
+  --navy-soft: #56628f;
+  --cream: #fdf5de;
+  --mat: #f7efd4;
+  --yellow: #f8d64b;
+  --red: #e9584c;
+  --blue: #59a6e4;
+  --orange: #f29a3a;
+  --green: #3faf6a;
+
+  --display: "Bungee", "Arial Black", Impact, sans-serif;
+  --numeral: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif;
+  --label: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--navy);
+  background: var(--aqua) radial-gradient(130% 90% at 50% -10%, var(--aqua-hi) 0%, var(--aqua) 55%, var(--aqua-deep) 100%) fixed;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 132px;
+}
+button, select, input { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: var(--label); font-weight: 700; font-size: 1rem;
+  text-transform: uppercase; letter-spacing: .07em;
+  border: 2px solid var(--navy); border-radius: 10px;
+  background: var(--cream); color: var(--navy);
+  padding: .5em 1.05em; cursor: pointer;
+  box-shadow: 3px 3px 0 var(--navy);
+  transition: transform .08s, box-shadow .08s;
+}
+.btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--navy); }
+.btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--navy); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--yellow); }
+.btn.big { font-size: 1.25rem; padding: .6em 1.4em; }
+.btn.sm { font-size: .85rem; padding: .35em .75em; box-shadow: 2px 2px 0 var(--navy); }
+:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+/* ---------- Logo & ribbons ---------- */
+.logo {
+  font-family: var(--display); font-weight: 400;
+  display: inline-flex; align-items: flex-end; line-height: .9;
+  color: var(--yellow);
+  -webkit-text-stroke: .045em var(--navy); paint-order: stroke fill;
+  text-shadow: .02em .02em 0 var(--navy), .04em .04em 0 var(--navy), .06em .06em 0 var(--navy), .08em .08em 0 var(--navy);
+}
+.logo .band {
+  background: var(--cream); border: .05em solid var(--navy);
+  padding: .14em .22em .06em; border-radius: .08em;
+  box-shadow: .07em .07em 0 var(--navy);
+}
+.logo .seven {
+  font-size: 1.75em; margin-left: -.08em; transform: rotate(-4deg) translateY(.06em);
+  position: relative; z-index: 1;
+}
+.ribbon {
+  display: inline-block;
+  font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  background: var(--cream); color: var(--navy);
+  border: 2px solid var(--navy); padding: .28em .9em;
+  box-shadow: 3px 3px 0 var(--navy);
+  transform: rotate(-2deg);
+}
+.ribbon.alt { transform: rotate(2deg); }
+
+/* ---------- Cards ---------- */
+.card {
+  --c: var(--navy);
+  font-size: 13px;
+  width: 3em; height: 4.2em; flex: none;
+  position: relative; display: grid; place-items: center; overflow: hidden;
+  background: var(--cream); color: var(--navy);
+  border: .13em solid var(--navy); border-radius: .4em;
+  box-shadow: .12em .14em 0 rgba(31, 42, 90, .35);
+}
+.card::before, .card::after {
+  content: ""; position: absolute; width: 1.45em; height: 1.45em;
+  background: repeating-conic-gradient(from 90deg at 0 0, var(--fan, var(--c)) 0 10deg, transparent 10deg 20deg);
+  border-bottom-right-radius: 100%; opacity: .8;
+}
+.card::before { top: 0; left: 0; }
+.card::after { bottom: 0; right: 0; transform: rotate(180deg); }
+.card .v {
+  position: relative; z-index: 1;
+  font-family: var(--numeral); font-weight: 900; font-size: 2.35em; line-height: 1;
+  color: var(--c);
+  -webkit-text-stroke: .045em var(--navy); paint-order: stroke fill;
+  text-shadow: .045em .045em 0 var(--navy);
+}
+.card .w {
+  position: absolute; z-index: 1; left: 0; right: 0; bottom: .42em; text-align: center;
+  font-family: var(--label); font-weight: 700; font-size: .36em; letter-spacing: .1em;
+}
+.card.mod { --c: var(--orange); }
+.card.mod .v { font-size: 1.7em; }
+.card.mod.x2 { --c: var(--red); }
+.card.act { background: var(--c); --fan: var(--cream); }
+.card.act .ic { position: relative; z-index: 1; font-size: 1.5em; line-height: 1; color: var(--navy); margin-top: -.6em; }
+.card.act .lbl {
+  position: absolute; z-index: 1; left: .3em; right: .3em; top: 50%;
+  font-family: var(--label); font-weight: 700; font-size: .4em; line-height: 1.05;
+  text-transform: uppercase; text-align: center; letter-spacing: .04em;
+  background: var(--cream); border: .12em solid var(--navy); padding: .3em .2em;
+}
+.card.sm .w, .card.sm .lbl { display: none; }
+.card.sm.act .ic { margin-top: 0; }
+.card.back {
+  background: repeating-linear-gradient(45deg, var(--blue) 0 .35em, var(--aqua) .35em .7em);
+}
+.card.back::before, .card.back::after { display: none; }
+.card.back .v {
+  font-family: var(--display); font-size: 1.5em; color: var(--yellow);
+  background: var(--cream); border: .07em solid var(--navy); border-radius: 50%;
+  width: 1.4em; height: 1.4em; display: grid; place-items: center; text-shadow: none; -webkit-text-stroke: .05em var(--navy);
+}
+.card.bust { outline: .2em solid var(--red); outline-offset: -.2em; transform: rotate(7deg); }
+.card.fresh { animation: flip-in .42s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes flip-in {
+  from { transform: perspective(400px) rotateY(95deg) translateY(-.4em); }
+  to { transform: perspective(400px) rotateY(0); }
+}
+.card.bust.fresh { animation: shake .45s; }
+@keyframes shake {
+  0%, 100% { transform: rotate(7deg); }
+  25% { transform: rotate(-6deg) translateX(-3px); }
+  60% { transform: rotate(12deg) translateX(3px); }
+}
+
+/* ---------- Setup screen ---------- */
+.setup { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.box {
+  position: relative;
+  background: radial-gradient(90% 70% at 50% 25%, var(--aqua-hi), var(--aqua) 75%);
+  border: 4px solid var(--navy); border-radius: 18px;
+  padding: 14px;
+  box-shadow: 8px 8px 0 var(--navy);
+}
+.frame {
+  position: relative;
+  border: 5px solid var(--yellow); border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--navy), inset 0 0 0 2px var(--navy);
+  padding: clamp(18px, 4vw, 36px) clamp(14px, 4vw, 36px);
+  display: flex; flex-direction: column; gap: 28px;
+}
+.corner {
+  position: absolute; width: 22px; height: 22px; border: 2px solid var(--navy); z-index: 2;
+}
+.corner.tl { top: 8px; left: 8px; background: var(--red); }
+.corner.tr { top: 8px; right: 8px; background: var(--blue); }
+.corner.bl { bottom: 8px; left: 8px; background: var(--orange); }
+.corner.br { bottom: 8px; right: 8px; background: var(--red); }
+.hero { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.fan { position: relative; height: 70px; width: 220px; margin-bottom: -26px; }
+.fan i {
+  position: absolute; left: 50%; bottom: 0; width: 56px; height: 80px;
+  border: 3px solid var(--navy); border-radius: 8px; transform-origin: 50% 120%;
+}
+.fan i:nth-child(1) { background: var(--red); transform: translateX(-50%) rotate(-38deg); }
+.fan i:nth-child(2) { background: var(--orange); transform: translateX(-50%) rotate(-23deg); }
+.fan i:nth-child(3) { background: var(--yellow); transform: translateX(-50%) rotate(-8deg); }
+.fan i:nth-child(4) { background: var(--cream); transform: translateX(-50%) rotate(7deg); }
+.fan i:nth-child(5) { background: var(--blue); transform: translateX(-50%) rotate(22deg); }
+.fan i:nth-child(6) { background: #a6cf55; transform: translateX(-50%) rotate(37deg); }
+.hero .logo { font-size: clamp(54px, 13vw, 104px); }
+.tagline {
+  margin: 0; font-family: var(--label); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; font-size: 1.15rem; max-width: 22ch;
+}
+.ribbons { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.panel {
+  min-width: 0;
+  background: var(--cream); border: 3px solid var(--navy); border-radius: 14px;
+  padding: clamp(14px, 3vw, 24px); display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 5px 5px 0 var(--navy);
+}
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.panel-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.35rem; }
+.count { font-family: var(--label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--navy-soft); font-variant-numeric: tabular-nums; }
+.hint { margin: 0; color: var(--navy-soft); max-width: 62ch; line-height: 1.45; }
+#seats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.seat-row {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 128px 36px; gap: 8px; align-items: center;
+  background: var(--mat); border: 2px solid var(--navy); border-radius: 10px; padding: 6px 8px;
+}
+.seat-no {
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--navy); color: var(--cream); font-family: var(--label); font-weight: 700;
+}
+.seat-row input, .seat-row select, .tools select, .opts select {
+  border: 2px solid var(--navy); border-radius: 8px; background: var(--cream);
+  padding: .35em .55em; min-width: 0; width: 100%;
+}
+.seat-row select:disabled { opacity: .35; }
+.seg { display: inline-flex; border: 2px solid var(--navy); border-radius: 8px; overflow: hidden; }
+.seg button {
+  border: 0; background: var(--cream); padding: .35em .7em; cursor: pointer;
+  font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+}
+.seg button + button { border-left: 2px solid var(--navy); }
+.seg button.on { background: var(--navy); color: var(--cream); }
+.x {
+  width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--navy);
+  background: var(--cream); cursor: pointer; font-size: 1.2rem; line-height: 1;
+}
+.x:disabled { opacity: .3; cursor: not-allowed; }
+.row-btns, .start-row, .opts { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.opts label { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; }
+.opts select { width: auto; }
+.opts input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--navy); }
+.start-row { justify-content: space-between; border-top: 2px dashed var(--navy-soft); padding-top: 14px; }
+.credit { margin: 0; text-align: center; font-size: .85rem; color: var(--navy); opacity: .75; }
+@media (max-width: 600px) {
+  .seat-row { grid-template-columns: 30px auto minmax(0, 1fr) 34px; }
+  .seat-row .seat-name { grid-column: 2 / 4; grid-row: 1; }
+  .seat-row .x { grid-column: 4; grid-row: 1; }
+  .seat-row .seg { grid-column: 2; grid-row: 2; }
+  .seat-row select { grid-column: 3 / 5; grid-row: 2; }
+}
+
+/* ---------- Game screen ---------- */
+.game { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.topbar {
+  display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap;
+  background: var(--cream); border: 3px solid var(--navy); border-radius: 14px;
+  padding: 10px 16px; box-shadow: 5px 5px 0 var(--navy);
+}
+.topbar .logo { font-size: 30px; }
+.meta { display: flex; gap: 10px 18px; align-items: center; flex-wrap: wrap; flex: 1; }
+.stat { font-family: var(--label); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-soft); font-variant-numeric: tabular-nums; }
+.stat b { color: var(--navy); font-size: 1.15em; }
+.tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tools label { display: inline-flex; gap: 6px; align-items: center; font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.tools select { width: auto; padding: .25em .4em; }
+
+.stage {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: stretch;
+}
+.spot {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--navy); color: var(--cream); border-radius: 14px; padding: 14px 18px;
+  border: 3px solid var(--navy); box-shadow: 5px 5px 0 var(--navy-deep);
+}
+.pile { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pile .card { font-size: 18px; box-shadow: .1em .1em 0 var(--cream), .2em .2em 0 var(--navy-soft), .3em .3em 0 var(--cream); }
+.pile small, .spot-cap small { font-family: var(--label); text-transform: uppercase; letter-spacing: .08em; opacity: .8; font-variant-numeric: tabular-nums; }
+#spot-card .card { font-size: 32px; box-shadow: .1em .12em 0 rgba(0, 0, 0, .35); }
+#spot-card .empty {
+  width: 96px; height: 134px; border: 3px dashed var(--navy-soft); border-radius: 12px;
+  display: grid; place-items: center; text-align: center; padding: 8px;
+  font-family: var(--label); text-transform: uppercase; letter-spacing: .06em; color: var(--aqua-hi);
+}
+.spot-cap { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 220px; }
+.spot-cap strong { font-family: var(--display); font-weight: 400; font-size: 1.3rem; line-height: 1.1; color: var(--yellow); }
+.spot-cap span { line-height: 1.35; }
+.log {
+  list-style: none; margin: 0; padding: 12px 16px; min-width: 0;
+  background: var(--cream); border: 3px solid var(--navy); border-radius: 14px; box-shadow: 5px 5px 0 var(--navy);
+  display: flex; flex-direction: column; gap: 4px; max-height: 196px; overflow-y: auto;
+}
+.log li { line-height: 1.35; padding-left: 14px; position: relative; }
+.log li::before { content: ""; position: absolute; left: 0; top: .5em; width: 6px; height: 6px; background: var(--navy-soft); transform: rotate(45deg); }
+.log li:first-child { font-weight: 600; }
+.log li:first-child::before { background: var(--red); }
+.log .head { font-family: var(--label); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-soft); padding-left: 0; }
+.log .head::before { display: none; }
+
+.table { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.mat {
+  background: var(--mat); border: 3px solid var(--navy); border-radius: 14px;
+  padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  box-shadow: 5px 5px 0 var(--navy); position: relative;
+  transition: transform .2s, box-shadow .2s;
+}
+.mat.turn { background: var(--cream); box-shadow: 0 0 0 4px var(--yellow), 7px 7px 0 4px var(--navy); transform: translateY(-2px); }
+.mat.busted { background: #efd9cf; }
+.mat.busted .slots { opacity: .55; }
+.mat-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mat-head .seat-no { flex: none; }
+.mat-name { min-width: 0; display: flex; flex-direction: column; flex: 1; }
+.mat-name b { font-family: var(--label); font-weight: 700; font-size: 1.3rem; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mat-name small { font-family: var(--label); font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--navy-soft); }
+.dealer {
+  font-family: var(--label); font-weight: 700; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--yellow); border: 2px solid var(--navy); border-radius: 999px; padding: .05em .55em;
+}
+.swap {
+  border: 0; background: none; padding: 2px 0; cursor: pointer;
+  font-family: var(--label); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: .78rem;
+  color: var(--navy-soft); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap;
+}
+.swap:hover { color: var(--navy); }
+.scoreline { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center; }
+.rnd { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.rnd strong { font-family: var(--numeral); font-weight: 900; font-size: 2.3rem; font-variant-numeric: tabular-nums; }
+.rnd small, .tot small { font-family: var(--label); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .72rem; color: var(--navy-soft); }
+.tot { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tot-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.tot-row b { font-family: var(--label); font-size: 1.1rem; }
+.bar { height: 10px; border: 2px solid var(--navy); border-radius: 999px; background: var(--cream); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--yellow); border-right: 2px solid var(--navy); transition: width .6s; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip {
+  font-family: var(--label); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .07em;
+  border: 2px solid var(--navy); border-radius: 999px; padding: .08em .6em; background: var(--cream);
+}
+.chip.active { background: var(--aqua-hi); }
+.chip.stayed { background: var(--green); color: var(--cream); }
+.chip.frozen { background: var(--blue); color: var(--navy); }
+.chip.busted { background: var(--red); color: var(--cream); }
+.chip.flip7 { background: var(--yellow); }
+.chip.odds { border-style: dashed; background: transparent; }
+.chip.odds.hot { border-color: var(--red); color: var(--red); }
+.slots {
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
+  container-type: inline-size;
+}
+.slots .card, .slots .slot { font-size: 12px; font-size: calc((100cqi - 24px) / 7 / 3); }
+.slot { width: 3em; height: 4.2em; border: .12em dashed var(--navy-soft); border-radius: .4em; opacity: .5; display: grid; place-items: center; }
+.slot::after { content: attr(data-n); font-family: var(--label); font-weight: 700; font-size: 1.1em; color: var(--navy-soft); }
+.extras { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 20px; }
+.extras .card { font-size: 12px; }
+.extras .none { font-size: .82rem; color: var(--navy-soft); font-style: italic; }
+
+/* ---------- Action bar ---------- */
+.actionbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--navy); color: var(--cream);
+  border-top: 4px solid var(--yellow);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.bar-in { max-width: 1400px; margin: 0 auto; display: flex; gap: 12px 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.bar-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bar-info strong { font-family: var(--display); font-weight: 400; font-size: 1.25rem; color: var(--yellow); }
+.bar-info span { opacity: .85; }
+.bar-btns { display: flex; gap: 12px; }
+.actionbar .btn { box-shadow: 3px 3px 0 var(--navy-deep); border-color: var(--cream); }
+.actionbar .btn.primary { border-color: var(--navy); box-shadow: 0 0 0 2px var(--cream), 4px 4px 0 2px var(--navy-deep); }
+.actionbar .btn.big { min-width: 120px; }
+.thinking::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+kbd { font-family: var(--label); border: 1px solid currentColor; border-radius: 4px; padding: 0 .3em; font-size: .85em; opacity: .8; }
+
+/* ---------- Banner ---------- */
+.banner {
+  position: fixed; left: 50%; top: calc(30% + env(safe-area-inset-top, 0px)); z-index: 40;
+  transform: translate(-50%, -50%) rotate(-3deg) scale(.6); opacity: 0; pointer-events: none;
+  font-family: var(--display); font-size: clamp(30px, 7vw, 64px); white-space: nowrap;
+  color: var(--yellow); background: var(--navy); border: 4px solid var(--cream);
+  padding: .1em .55em; box-shadow: 8px 8px 0 var(--navy-deep);
+  transition: transform .25s cubic-bezier(.2, .9, .3, 1.3), opacity .2s;
+}
+.banner.show { opacity: 1; transform: translate(-50%, -50%) rotate(-3deg) scale(1); }
+.banner.bad { background: var(--red); color: var(--cream); }
+.banner.cool { background: var(--blue); color: var(--navy); }
+
+/* ---------- Modal ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: center;
+  background: rgba(17, 26, 64, .6);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet {
+  width: min(640px, 100%); max-height: 100%; overflow-y: auto;
+  background: var(--cream); border: 4px solid var(--navy); border-radius: 16px;
+  box-shadow: 8px 8px 0 var(--navy-deep);
+  padding: clamp(18px, 4vw, 28px); display: flex; flex-direction: column; gap: 16px;
+}
+.sheet h2 { font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.1; }
+.sheet p { margin: 0; line-height: 1.5; }
+.sheet .eyebrow { font-family: var(--label); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-soft); }
+.sheet-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 10px; }
+.pick-btn {
+  text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px;
+  border: 2px solid var(--navy); border-radius: 10px; background: var(--mat); padding: 10px 12px;
+  box-shadow: 3px 3px 0 var(--navy);
+}
+.pick-btn:hover { background: var(--yellow); }
+.pick-btn b { font-family: var(--label); font-size: 1.2rem; }
+.pick-btn span { font-size: .85rem; color: var(--navy-soft); font-variant-numeric: tabular-nums; }
+.scroll-x { overflow-x: auto; }
+.score-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.score-table th, .score-table td { padding: 7px 8px; text-align: right; border-bottom: 2px solid var(--mat); white-space: nowrap; }
+.score-table th { font-family: var(--label); text-transform: uppercase; letter-spacing: .07em; font-size: .78rem; color: var(--navy-soft); border-bottom-color: var(--navy); }
+.score-table th:first-child, .score-table td:first-child { text-align: left; }
+.score-table td.pts { font-weight: 700; }
+.score-table td.total { font-family: var(--numeral); font-weight: 900; font-size: 1.3rem; }
+.score-table tr.lead td.total { color: var(--red); }
+.score-table .muted { color: var(--navy-soft); }
+.winner-name { font-family: var(--display); font-size: clamp(34px, 8vw, 58px); color: var(--yellow); -webkit-text-stroke: .04em var(--navy); paint-order: stroke fill; text-shadow: .05em .05em 0 var(--navy); line-height: 1; }
+.rules { display: flex; flex-direction: column; gap: 14px; }
+.rules h3 { font-family: var(--label); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 1rem; }
+.rules ul { margin: 6px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 5px; line-height: 1.45; }
+.rules .demo { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.rules .demo .card { font-size: 15px; }
+
+@media (max-width: 760px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .spot { justify-content: flex-start; }
+  #spot-card .card { font-size: 26px; }
+  #spot-card .empty { width: 78px; height: 109px; }
+  .topbar .logo { font-size: 24px; }
+  .log { max-height: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head><!--sk-->
+<body><!--sk-->
+
+<!-- ================= SETUP ================= -->
+<main id="setup" class="setup">
+  <div class="box">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <div class="frame">
+      <div class="hero">
+        <div class="fan" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h1 class="logo" aria-label="Flip 7"><span class="band">FLIP</span><span class="seven">7</span></h1>
+        <p class="tagline">The press-your-luck card game for 3 to 10 players</p>
+        <div class="ribbons"><span class="ribbon">Press your luck!</span><span class="ribbon alt">Race to 200!</span></div>
+      </div>
+
+      <section class="panel" aria-labelledby="seat-title">
+        <div class="panel-head">
+          <h2 id="seat-title">Seat the table</h2>
+          <span class="count" id="seat-count"></span>
+        </div>
+        <p class="hint">Players share this screen and take turns. Bots play their own turns, so you can fill empty seats or add extra opponents. Cautious bots stop early, bold bots push for big rounds.</p>
+        <ol id="seats"></ol>
+        <div class="row-btns">
+          <button type="button" class="btn" id="add-human">+ Add player</button>
+          <button type="button" class="btn" id="add-bot">+ Add bot</button>
+        </div>
+        <div class="opts">
+          <label><input type="checkbox" id="opt-odds" checked> Show bust odds</label>
+          <label>Pace
+            <select id="opt-speed">
+              <option value="0.6">Relaxed</option>
+              <option value="1" selected>Normal</option>
+              <option value="2.2">Quick</option>
+            </select>
+          </label>
+        </div>
+        <div class="start-row">
+          <button type="button" class="btn" data-rules>How to play</button>
+          <button type="button" class="btn primary big" id="start">Deal the cards</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <p class="credit">Fan-made table for Flip 7, the card game designed by Eric Olsen.</p>
+</main>
+
+<!-- ================= GAME ================= -->
+<main id="game" class="game" hidden>
+  <header class="topbar">
+    <div class="logo" aria-label="Flip 7"><span class="band">FLIP</span><span class="seven">7</span></div>
+    <div class="meta">
+      <span class="ribbon" id="round-label">Round 1</span>
+      <span class="stat">First to <b id="target-n">200</b></span>
+    </div>
+    <div class="tools">
+      <label for="speed">Pace</label>
+      <select id="speed">
+        <option value="0.6">Relaxed</option>
+        <option value="1">Normal</option>
+        <option value="2.2">Quick</option>
+      </select>
+      <button type="button" class="btn sm" data-rules>Rules</button>
+      <button type="button" class="btn sm" id="quit">New table</button>
+    </div>
+  </header>
+
+  <section class="stage">
+    <div class="spot" aria-live="polite">
+      <div class="pile">
+        <div class="card back"><span class="v">7</span></div>
+        <small><span id="deck-n">94</span> in deck</small>
+        <small><span id="disc-n">0</span> discard</small>
+      </div>
+      <div id="spot-card"></div>
+      <div class="spot-cap" id="spot-cap"></div>
+    </div>
+    <ol class="log" id="log" aria-label="Game log"></ol>
+  </section>
+
+  <section class="table" id="table" aria-label="Players"></section>
+</main>
+
+<div class="actionbar" id="bar" hidden>
+  <div class="bar-in">
+    <div class="bar-info" id="bar-info"></div>
+    <div class="bar-btns" id="bar-btns" hidden>
+      <button type="button" class="btn big" id="btn-stay">Stay</button>
+      <button type="button" class="btn primary big" id="btn-hit">Flip!</button>
+    </div>
+  </div>
+</div>
+
+<div class="banner" id="banner" aria-hidden="true"></div>
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Constants ---------- */
+  const TARGET = 200;
+  const FLIP7_BONUS = 15;
+  const NUM_COLORS = ['#8d97b0', '#b3a586', '#9fc23a', '#ea5b7d', '#8a6ad0', '#3faf6a', '#f08c3a',
+                      '#e5483e', '#3b8fd8', '#d6a52a', '#2fb2ad', '#6f8fdc', '#c4559d'];
+  const WORDS = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE'];
+  const BOT_NAMES = ['Dot', 'Lucky', 'Ace', 'Rook', 'Nova', 'Pip', 'Juno', 'Max', 'Zed', 'Kit', 'Bea', 'Ozzie'];
+  const STYLES = { cautious: 'Cautious', balanced: 'Balanced', bold: 'Bold' };
+  const ACTIONS = {
+    freeze: { name: 'Freeze', icon: '❄︎', color: 'var(--blue)' },
+    flip3: { name: 'Flip Three', icon: '↻', color: 'var(--yellow)' },
+    second: { name: 'Second Chance', icon: '♥︎', color: 'var(--red)' }
+  };
+
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+  };
+
+  /* ---------- Setup ---------- */
+  let seats = store.get('flip7-seats');
+  if (!Array.isArray(seats) || seats.length < 3 || seats.length > 10) {
+    seats = [
+      { name: 'You', bot: false, style: 'balanced' },
+      { name: 'Dot', bot: true, style: 'cautious' },
+      { name: 'Lucky', bot: true, style: 'bold' },
+      { name: 'Ace', bot: true, style: 'balanced' }
+    ];
+  }
+  const savedOpts = store.get('flip7-opts') || {};
+  $('#opt-odds').checked = savedOpts.odds !== false;
+  if (savedOpts.speed) $('#opt-speed').value = String(savedOpts.speed);
+
+  function nextBotName(taken) {
+    const used = new Set(taken.map(s => s.name.toLowerCase()));
+    return BOT_NAMES.find(n => !used.has(n.toLowerCase())) || `Bot ${taken.length + 1}`;
+  }
+
+  function renderSetup() {
+    $('#seats').innerHTML = seats.map((s, i) => `
+      <li class="seat-row">
+        <span class="seat-no">${i + 1}</span>
+        <input id="seat-name-${i}" class="seat-name" data-i="${i}" value="${esc(s.name)}" maxlength="14" aria-label="Seat ${i + 1} name">
+        <div class="seg" role="group" aria-label="Seat ${i + 1} is played by">
+          <button type="button" class="${s.bot ? '' : 'on'}" data-i="${i}" data-type="human" aria-pressed="${!s.bot}">Player</button>
+          <button type="button" class="${s.bot ? 'on' : ''}" data-i="${i}" data-type="bot" aria-pressed="${s.bot}">Bot</button>
+        </div>
+        <select id="seat-style-${i}" class="seat-style" data-i="${i}" aria-label="Seat ${i + 1} bot style" ${s.bot ? '' : 'disabled'}>
+          ${Object.entries(STYLES).map(([k, v]) => `<option value="${k}" ${s.style === k ? 'selected' : ''}>${v} bot</option>`).join('')}
+        </select>
+        <button type="button" class="x" data-remove="${i}" aria-label="Remove seat ${i + 1}" ${seats.length <= 3 ? 'disabled' : ''}>&times;</button>
+      </li>`).join('');
+    $('#seat-count').textContent = `${seats.length} of 10 seats`;
+    $('#add-human').disabled = $('#add-bot').disabled = seats.length >= 10;
+  }
+
+  $('#seats').addEventListener('input', e => {
+    if (e.target.matches('.seat-name')) seats[+e.target.dataset.i].name = e.target.value;
+  });
+  $('#seats').addEventListener('change', e => {
+    if (e.target.matches('.seat-style')) seats[+e.target.dataset.i].style = e.target.value;
+  });
+  $('#seats').addEventListener('click', e => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.dataset.type) {
+      const s = seats[+t.dataset.i];
+      s.bot = t.dataset.type === 'bot';
+      renderSetup();
+    } else if (t.dataset.remove !== undefined && seats.length > 3) {
+      seats.splice(+t.dataset.remove, 1);
+      renderSetup();
+    }
+  });
+  $('#add-human').addEventListener('click', () => {
+    if (seats.length >= 10) return;
+    seats.push({ name: `Player ${seats.filter(s => !s.bot).length + 1}`, bot: false, style: 'balanced' });
+    renderSetup();
+    $(`#seat-name-${seats.length - 1}`).select();
+  });
+  $('#add-bot').addEventListener('click', () => {
+    if (seats.length >= 10) return;
+    const styles = Object.keys(STYLES);
+    seats.push({ name: nextBotName(seats), bot: true, style: styles[seats.length % 3] });
+    renderSetup();
+  });
+  $('#start').addEventListener('click', () => {
+    seats.forEach((s, i) => { s.name = s.name.trim() || (s.bot ? nextBotName(seats) : `Player ${i + 1}`); });
+    store.set('flip7-seats', seats);
+    store.set('flip7-opts', { odds: $('#opt-odds').checked, speed: +$('#opt-speed').value });
+    newGame();
+  });
+
+  /* ---------- Deck ---------- */
+  function buildDeck() {
+    const d = [{ t: 'num', v: 0 }];
+    for (let v = 1; v <= 12; v++) for (let k = 0; k < v; k++) d.push({ t: 'num', v });
+    [2, 4, 6, 8, 10].forEach(v => d.push({ t: 'mod', v }));
+    d.push({ t: 'mod', x2: true });
+    ['freeze', 'flip3', 'second'].forEach(a => { for (let k = 0; k < 3; k++) d.push({ t: 'act', a }); });
+    d.forEach((c, i) => { c.id = i; });
+    return d; // 94 cards
+  }
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /* ---------- Game state ---------- */
+  let G = null;
+  const blankRound = () => ({ nums: [], mods: [], acts: [], sc: null, bust: null, status: 'active', flip7: false });
+
+  function newGame() {
+    const prevId = G ? G.id : 0;
+    G = {
+      id: prevId + 1,
+      players: seats.map((s, i) => ({ id: i, name: s.name, bot: s.bot, style: s.style, total: 0, last: 0, ...blankRound() })),
+      deck: shuffle(buildDeck()),
+      discard: [],
+      dealer: Math.floor(Math.random() * seats.length),
+      round: 0,
+      log: [],
+      turn: null,
+      phase: 'deal',
+      spot: null,
+      pending: null,
+      roundOver: false,
+      speed: +$('#opt-speed').value || 1,
+      odds: $('#opt-odds').checked
+    };
+    $('#speed').value = String(G.speed);
+    $('#setup').hidden = true;
+    $('#game').hidden = false;
+    $('#bar').hidden = false;
+    closeModal();
+    window.scrollTo(0, 0);
+    run(G.id);
+  }
+
+  const isActive = p => p.status === 'active';
+  const activePlayers = () => G.players.filter(isActive);
+
+  function wait(ms) {
+    const id = G.id;
+    return new Promise((res, rej) => setTimeout(() => (G.id === id ? res() : rej('abort')), ms / G.speed));
+  }
+  function guard(id) { if (!G || G.id !== id) throw 'abort'; }
+
+  function draw() {
+    if (!G.deck.length) {
+      if (!G.discard.length) return null;
+      G.deck = shuffle(G.discard);
+      G.discard = [];
+      addLog('The draw pile ran out. The discard pile was shuffled into a new deck.');
+    }
+    return G.deck.pop();
+  }
+
+  function breakdown(p) {
+    if (p.status === 'busted') return { num: 0, x2: false, plus: 0, bonus: 0, total: 0 };
+    const num = p.nums.reduce((s, c) => s + c.v, 0);
+    const x2 = p.mods.some(m => m.x2);
+    const plus = p.mods.filter(m => !m.x2).reduce((s, m) => s + m.v, 0);
+    const bonus = p.flip7 ? FLIP7_BONUS : 0;
+    return { num, x2, plus, bonus, total: num * (x2 ? 2 : 1) + plus + bonus };
+  }
+
+  function unseenPool() { return G.deck.length ? G.deck : G.discard; }
+  function bustOdds(p) {
+    const pool = unseenPool();
+    if (!pool.length || !p.nums.length) return 0;
+    const have = new Set(p.nums.map(c => c.v));
+    let dup = 0;
+    for (const c of pool) if (c.t === 'num' && have.has(c.v)) dup++;
+    return dup / pool.length;
+  }
+
+  function addLog(html) {
+    G.log.unshift(html);
+    if (G.log.length > 60) G.log.length = 60;
+    renderLog();
+  }
+  const nm = p => `<b>${esc(p.name)}</b>`;
+
+  /* ---------- Main loop ---------- */
+  async function run(id) {
+    try {
+      for (;;) {
+        await playRound(id);
+        const over = await endRound(id);
+        if (over) break;
+      }
+    } catch (e) {
+      if (e !== 'abort') console.error(e);
+    }
+  }
+
+  async function playRound(id) {
+    guard(id);
+    // Cards from the last round go to the discard pile. The deck is not reshuffled between rounds.
+    G.players.forEach(p => {
+      G.discard.push(...p.nums, ...p.mods, ...p.acts);
+      if (p.sc) G.discard.push(p.sc);
+      if (p.bust) G.discard.push(p.bust);
+      Object.assign(p, blankRound());
+    });
+    G.round++;
+    G.roundOver = false;
+    G.spot = null;
+    G.turn = null;
+    G.phase = 'deal';
+    const n = G.players.length;
+    const order = i => G.players[(G.dealer + 1 + i) % n];
+    G.log.unshift(`<span class="head">Round ${G.round}</span>`);
+    addLog(`${nm(G.players[G.dealer])} deals one card to each player.`);
+    render();
+    await wait(500);
+
+    // Initial deal: one card face up to each player, resolving action cards as they appear.
+    for (let i = 0; i < n && !G.roundOver; i++) {
+      const p = order(i);
+      if (!isActive(p)) continue;
+      G.turn = p;
+      await flipFor(p);
+    }
+
+    // Turns: each active player flips or stays, until nobody is left or someone flips 7.
+    G.phase = 'play';
+    let i = 0;
+    while (!G.roundOver && activePlayers().length) {
+      const p = order(i % n);
+      i++;
+      if (!isActive(p)) continue;
+      G.turn = p;
+      render();
+      const choice = p.bot ? await botTurn(p) : await humanTurn(p);
+      guard(id);
+      if (!isActive(p) || G.roundOver) continue;
+      if (choice === 'stay') {
+        p.status = 'stayed';
+        addLog(`${nm(p)} stays and banks <b>${breakdown(p).total}</b>.`);
+        render();
+        await wait(450);
+      } else {
+        await flipFor(p);
+      }
+    }
+    G.turn = null;
+    G.phase = 'end';
+    render();
+    await wait(700);
+  }
+
+  async function flipFor(p, ctx = {}) {
+    const c = draw();
+    if (!c) {
+      G.roundOver = true;
+      addLog('No cards are left anywhere. The round ends.');
+      return;
+    }
+    c.fresh = true;
+    G.spot = { c, p, note: '' };
+    await receive(p, c, ctx);
+    render();
+    await wait(ctx.pending ? 800 : 700);
+    c.fresh = false;
+  }
+
+  async function receive(p, c, ctx) {
+    if (c.t === 'num') {
+      if (p.nums.some(x => x.v === c.v)) {
+        if (p.sc) {
+          G.discard.push(c, p.sc);
+          p.sc = null;
+          G.spot.note = 'saved';
+          addLog(`${nm(p)} flipped a second ${c.v}. Second Chance saves them, and both cards are discarded.`);
+          banner('Saved!', 'cool');
+        } else {
+          p.bust = c;
+          p.status = 'busted';
+          G.spot.note = 'bust';
+          addLog(`${nm(p)} flipped a second ${c.v} and <b>busts</b>. 0 points this round.`);
+          banner('Bust!', 'bad');
+        }
+      } else {
+        p.nums.push(c);
+        addLog(`${nm(p)} flipped a ${c.v}.`);
+        if (p.nums.length === 7) {
+          p.flip7 = true;
+          p.status = 'stayed';
+          G.roundOver = true;
+          G.spot.note = 'flip7';
+          addLog(`${nm(p)} has seven different numbers. <b>Flip 7!</b> +15 bonus, and the round ends now.`);
+          banner('Flip 7!');
+        }
+      }
+    } else if (c.t === 'mod') {
+      p.mods.push(c);
+      addLog(`${nm(p)} flipped a ${c.x2 ? '×2' : '+' + c.v} modifier.`);
+    } else if (ctx.pending && c.a !== 'second') {
+      ctx.pending.push(c);
+      G.spot.note = 'held';
+      addLog(`${nm(p)} flipped ${ACTIONS[c.a].name} during Flip Three. It will be played after the third card.`);
+    } else {
+      render();
+      await wait(450);
+      await resolveAction(p, c);
+    }
+  }
+
+  async function resolveAction(p, c) {
+    if (c.a === 'second') return gainSecond(p, c);
+    const cands = activePlayers();
+    if (!cands.length) { G.discard.push(c); return; }
+    const t = await chooseTarget(p, c.a, cands);
+    if (c.a === 'freeze') {
+      t.acts.push(c);
+      t.status = 'frozen';
+      addLog(`${nm(p)} plays Freeze on ${t === p ? 'themself' : nm(t)}. ${nm(t)} banks <b>${breakdown(t).total}</b> and is out of the round.`);
+      banner('Freeze!', 'cool');
+      render();
+      await wait(600);
+    } else {
+      t.acts.push(c);
+      addLog(`${nm(p)} plays Flip Three on ${t === p ? 'themself' : nm(t)}.`);
+      banner('Flip Three!');
+      render();
+      await wait(600);
+      await flipThree(t);
+    }
+  }
+
+  async function gainSecond(p, c) {
+    if (!p.sc) {
+      p.sc = c;
+      addLog(`${nm(p)} keeps a Second Chance.`);
+      return;
+    }
+    const cands = G.players.filter(o => o !== p && isActive(o) && !o.sc);
+    if (!cands.length) {
+      G.discard.push(c);
+      addLog(`${nm(p)} already has a Second Chance and nobody can take another, so it is discarded.`);
+      return;
+    }
+    const t = await chooseTarget(p, 'second', cands);
+    t.sc = c;
+    addLog(`${nm(p)} already has a Second Chance and gives one to ${nm(t)}.`);
+    render();
+  }
+
+  async function flipThree(t) {
+    const pending = [];
+    for (let k = 0; k < 3; k++) {
+      if (!isActive(t) || G.roundOver) break;
+      await flipFor(t, { pending });
+    }
+    for (const c of pending) {
+      if (isActive(t) && !G.roundOver) await resolveAction(t, c);
+      else G.discard.push(c);
+    }
+  }
+
+  async function endRound(id) {
+    guard(id);
+    G.players.forEach(p => { p.last = breakdown(p).total; p.total += p.last; });
+    render();
+    const max = Math.max(...G.players.map(p => p.total));
+    const leaders = G.players.filter(p => p.total === max);
+    if (max >= TARGET && leaders.length === 1) {
+      showWinner(leaders[0]);
+      return true;
+    }
+    const tie = max >= TARGET && leaders.length > 1;
+    await showSummary(tie);
+    guard(id);
+    G.dealer = (G.dealer + 1) % G.players.length;
+    return false;
+  }
+
+  /* ---------- Decisions ---------- */
+  function humanTurn(p) {
+    return new Promise(res => {
+      G.pending = { p, res: v => { G.pending = null; res(v); } };
+      render();
+      $('#btn-hit').focus({ preventScroll: true });
+    });
+  }
+
+  async function botTurn(p) {
+    render();
+    await wait(850);
+    return botDecide(p);
+  }
+
+  function botDecide(p) {
+    if (!p.nums.length) return 'hit';
+    const pool = unseenPool();
+    if (!pool.length) return 'stay';
+    const have = new Set(p.nums.map(c => c.v));
+    let dup = 0, safeSum = 0, safeN = 0;
+    for (const c of pool) {
+      if (c.t !== 'num') continue;
+      if (have.has(c.v)) dup++; else { safeSum += c.v; safeN++; }
+    }
+    const risk = dup / pool.length;
+    const cur = breakdown(p).total;
+    const others = G.players.filter(o => o !== p);
+    const bestOther = Math.max(0, ...others.map(o => o.total + breakdown(o).total));
+    // Bank a winning score when it would put this bot in the lead.
+    if (p.total + cur >= TARGET && p.total + cur > bestOther) return 'stay';
+    if (p.sc) return 'hit';
+    const cfg = { cautious: { bias: 3, cap: 0.24 }, balanced: { bias: 0, cap: 0.34 }, bold: { bias: -3, cap: 0.46 } }[p.style] || { bias: 0, cap: 0.34 };
+    let { bias, cap } = cfg;
+    const threat = Math.max(0, ...others.map(o => o.total));
+    if (threat >= TARGET - 30 && p.total + cur < threat) { bias -= 4; cap += 0.12; }
+    if (risk > cap) return 'stay';
+    const mult = p.mods.some(m => m.x2) ? 2 : 1;
+    const safeP = safeN / pool.length;
+    let gain = safeP * (safeN ? safeSum / safeN : 0) * mult + (1 - risk) * 1.2;
+    if (p.nums.length === 6) gain += safeP * FLIP7_BONUS;
+    const loss = risk * cur;
+    return gain - loss > bias ? 'hit' : 'stay';
+  }
+
+  const maxBy = (arr, f) => arr.reduce((best, x) => (f(x) > f(best) ? x : best), arr[0]);
+
+  function botTarget(p, kind, cands) {
+    if (kind === 'second') return cands.slice().sort((a, b) => a.total - b.total)[0];
+    const opp = cands.filter(o => o !== p);
+    if (!opp.length) return p;
+    if (kind === 'freeze') {
+      if (cands.includes(p) && bustOdds(p) > 0.3 && breakdown(p).total >= 18) return p;
+      return maxBy(opp, o => o.total * 0.2 - breakdown(o).total * 0.8);
+    }
+    return maxBy(opp, o => bustOdds(o) * (breakdown(o).total + 10) + o.total * 0.03);
+  }
+
+  async function chooseTarget(p, kind, cands) {
+    if (cands.length === 1) return cands[0];
+    if (p.bot) {
+      await wait(700);
+      return botTarget(p, kind, cands);
+    }
+    return pickModal(p, kind, cands);
+  }
+
+  function pickModal(p, kind, cands) {
+    const copy = {
+      freeze: ['Freeze', 'Choose an active player. They bank their points and are out of the round. You can pick yourself.'],
+      flip3: ['Flip Three', 'Choose an active player. They must flip the next three cards, one at a time. You can pick yourself.'],
+      second: ['Second Chance', 'You already hold one. Give this Second Chance to another active player.']
+    }[kind];
+    return new Promise(res => {
+      openModal(`
+        <p class="eyebrow">${esc(p.name)} flipped</p>
+        <h2>${copy[0]}</h2>
+        <p>${copy[1]}</p>
+        <div class="pick">
+          ${cands.map(o => `<button type="button" class="pick-btn" data-id="${o.id}">
+            <b>${esc(o.name)}${o === p ? ' (you)' : ''}</b>
+            <span>${breakdown(o).total} pts this round · ${o.nums.length} numbers</span>
+            <span>Total ${o.total}${G.odds ? ` · bust ${Math.round(bustOdds(o) * 100)}%` : ''}${o.sc ? ' · has Second Chance' : ''}</span>
+          </button>`).join('')}
+        </div>`);
+      const sheet = $('#sheet');
+      sheet.querySelector('.pick-btn').focus();
+      sheet.onclick = e => {
+        const b = e.target.closest('.pick-btn');
+        if (!b) return;
+        sheet.onclick = null;
+        closeModal();
+        res(G.players.find(o => o.id === +b.dataset.id));
+      };
+    });
+  }
+
+  /* ---------- Rendering ---------- */
+  function cardHTML(c, cls = '') {
+    const f = c.fresh ? ' fresh' : '';
+    if (c.t === 'num') {
+      return `<div class="card num${f} ${cls}" style="--c:${NUM_COLORS[c.v]}" title="${c.v}"><span class="v">${c.v}</span><span class="w">${WORDS[c.v]}</span></div>`;
+    }
+    if (c.t === 'mod') {
+      return `<div class="card mod${c.x2 ? ' x2' : ''}${f} ${cls}" title="${c.x2 ? 'Times two: doubles your number cards' : 'Plus ' + c.v + ' points'}"><span class="v">${c.x2 ? '×2' : '+' + c.v}</span><span class="w">${c.x2 ? 'DOUBLE' : 'BONUS'}</span></div>`;
+    }
+    const A = ACTIONS[c.a];
+    return `<div class="card act ${c.a}${f} ${cls}" style="--c:${A.color}" title="${A.name}"><span class="ic">${A.icon}</span><span class="lbl">${A.name}</span></div>`;
+  }
+
+  function render() {
+    if (!G) return;
+    $('#round-label').textContent = `Round ${G.round}`;
+    $('#target-n').textContent = TARGET;
+    $('#deck-n').textContent = G.deck.length;
+    $('#disc-n').textContent = G.discard.length;
+    renderSpot();
+    renderLog();
+    renderTable();
+    renderBar();
+  }
+
+  function renderSpot() {
+    const s = G.spot;
+    if (!s) {
+      $('#spot-card').innerHTML = `<div class="empty">Next card</div>`;
+      $('#spot-cap').innerHTML = `<small>Round ${G.round}</small><strong>Shuffle up</strong><span>${esc(G.players[G.dealer].name)} is dealing.</span>`;
+      return;
+    }
+    $('#spot-card').innerHTML = cardHTML(s.c, s.note === 'bust' ? 'bust' : '');
+    const head = { bust: 'Bust!', saved: 'Saved!', flip7: 'Flip 7!', held: 'Set aside' }[s.note] || describe(s.c);
+    const line = s.note === 'bust' ? `${esc(s.p.name)} already had a ${s.c.v}.`
+      : s.note === 'saved' ? `${esc(s.p.name)} used Second Chance.`
+      : s.note === 'flip7' ? `${esc(s.p.name)} collects seven numbers.`
+      : s.note === 'held' ? `Played after ${esc(s.p.name)}'s Flip Three.`
+      : `Flipped by ${esc(s.p.name)}.`;
+    $('#spot-cap').innerHTML = `<small>${G.phase === 'deal' ? 'Dealing' : 'Last flip'}</small><strong>${head}</strong><span>${line}</span>`;
+  }
+  const describe = c => c.t === 'num' ? `A ${c.v}` : c.t === 'mod' ? (c.x2 ? '×2' : `+${c.v}`) : ACTIONS[c.a].name;
+
+  function renderLog() {
+    if (!G) return;
+    $('#log').innerHTML = G.log.slice(0, 30).map(l => l.startsWith('<span class="head">') ? `<li class="head">${l}</li>` : `<li>${l}</li>`).join('');
+  }
+
+  function renderTable() {
+    $('#table').innerHTML = G.players.map((p, i) => {
+      const b = breakdown(p);
+      const st = p.flip7 ? 'flip7' : p.status;
+      const chipText = { active: G.roundOver ? 'Banked' : 'In play', stayed: 'Stayed', frozen: 'Frozen', busted: 'Bust', flip7: 'Flip 7!' }[st];
+      const sorted = p.nums.slice().sort((a, b2) => a.v - b2.v);
+      const slots = Array.from({ length: 7 }, (_, k) => sorted[k] ? cardHTML(sorted[k], 'sm') : `<div class="slot" data-n="${k + 1}"></div>`).join('');
+      const extras = [...p.mods.map(c => cardHTML(c, 'sm')), p.sc ? cardHTML(p.sc, 'sm') : '', ...p.acts.map(c => cardHTML(c, 'sm')), p.bust ? cardHTML(p.bust, 'sm bust') : ''].join('');
+      const odds = bustOdds(p);
+      const showOdds = G.odds && isActive(p) && p.nums.length && !G.roundOver;
+      const pct = Math.min(100, (p.total / TARGET) * 100);
+      const formula = b.total && (b.x2 || b.plus || b.bonus)
+        ? `${b.num}${b.x2 ? ' ×2' : ''}${b.plus ? ' +' + b.plus : ''}${b.bonus ? ' +15' : ''}` : '';
+      return `<article class="mat ${G.turn === p ? 'turn' : ''} ${p.status}" aria-label="${esc(p.name)}">
+        <div class="mat-head">
+          <span class="seat-no">${i + 1}</span>
+          <div class="mat-name"><b>${esc(p.name)}</b><small>${p.bot ? `${STYLES[p.style]} bot` : 'Player'}</small></div>
+          ${G.dealer === i ? '<span class="dealer" title="Dealer this round">Dealer</span>' : ''}
+          <button type="button" class="swap" data-swap="${p.id}">${p.bot ? 'Take seat' : 'Hand to bot'}</button>
+        </div>
+        <div class="scoreline">
+          <div class="rnd"><strong>${b.total}</strong><small>Round</small></div>
+          <div class="tot">
+            <div class="tot-row"><small>Total</small><b>${p.total}<span class="muted"> / ${TARGET}</span></b></div>
+            <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${TARGET}" aria-valuenow="${p.total}"><i style="width:${pct}%"></i></div>
+            <div class="chips">
+              <span class="chip ${st}">${chipText}</span>
+              ${showOdds ? `<span class="chip odds ${odds >= 0.3 ? 'hot' : ''}" title="Chance the next card is a number you already have">Bust ${Math.round(odds * 100)}%</span>` : ''}
+              ${formula ? `<span class="chip odds" title="Number total, then ×2, then bonuses">${formula}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="slots" aria-label="Number cards: ${p.nums.length} of 7">${slots}</div>
+        <div class="extras">${extras || '<span class="none">No modifier or action cards</span>'}</div>
+      </article>`;
+    }).join('');
+  }
+
+  function renderBar() {
+    const info = $('#bar-info');
+    const btns = $('#bar-btns');
+    const p = G.turn;
+    if (G.pending && G.pending.p === p) {
+      const b = breakdown(p);
+      const odds = Math.round(bustOdds(p) * 100);
+      info.innerHTML = `<strong>${esc(p.name)}, your turn</strong><span>${b.total} points on the table · ${p.nums.length} of 7 numbers${G.odds ? ` · ${odds}% bust chance` : ''}${p.sc ? ' · Second Chance ready' : ''} · <kbd>F</kbd> flip, <kbd>S</kbd> stay</span>`;
+      btns.hidden = false;
+    } else {
+      btns.hidden = true;
+      if (G.phase === 'deal') info.innerHTML = `<strong class="thinking">Dealing</strong><span>Every player gets one card face up.</span>`;
+      else if (G.phase === 'end') info.innerHTML = `<strong>Round over</strong><span>Adding up the scores.</span>`;
+      else if (p && p.bot) info.innerHTML = `<strong class="thinking">${esc(p.name)} is deciding</strong><span>${STYLES[p.style]} bot · ${breakdown(p).total} points on the table</span>`;
+      else if (p) info.innerHTML = `<strong>${esc(p.name)}</strong><span>Resolving cards.</span>`;
+      else info.innerHTML = `<strong>Flip 7</strong><span>Race to ${TARGET}.</span>`;
+    }
+  }
+
+  let bannerTimer = 0;
+  function banner(text, tone = '') {
+    const el = $('#banner');
+    el.textContent = text;
+    el.className = `banner show ${tone}`;
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => { el.className = `banner ${tone}`; }, 1100 / (G ? G.speed : 1));
+  }
+
+  /* ---------- Modals ---------- */
+  function openModal(html) {
+    $('#sheet').innerHTML = html;
+    $('#modal').hidden = false;
+  }
+  function closeModal() {
+    $('#modal').hidden = true;
+    $('#sheet').innerHTML = '';
+    $('#sheet').onclick = null;
+  }
+
+  function scoreTableHTML(showRound) {
+    const max = Math.max(...G.players.map(p => p.total));
+    return `<div class="scroll-x"><table class="score-table">
+      <thead><tr><th>Player</th>${showRound ? '<th>Numbers</th><th>×2</th><th>Bonus</th><th>Round</th>' : '<th>Last round</th>'}<th>Total</th></tr></thead>
+      <tbody>${G.players.slice().sort((a, b) => b.total - a.total).map(p => {
+        const b = breakdown(p);
+        const tag = p.flip7 ? ' · Flip 7' : p.status === 'busted' ? ' · bust' : p.status === 'frozen' ? ' · frozen' : '';
+        return `<tr class="${p.total === max ? 'lead' : ''}">
+          <td>${esc(p.name)}<span class="muted">${tag}</span></td>
+          ${showRound ? `<td>${p.status === 'busted' ? '<span class="muted">—</span>' : b.num}</td><td>${b.x2 ? '×2' : '<span class="muted">—</span>'}</td><td>${b.plus + b.bonus ? '+' + (b.plus + b.bonus) : '<span class="muted">—</span>'}</td><td class="pts">+${p.last}</td>` : `<td>+${p.last}</td>`}
+          <td class="total">${p.total}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+
+  function showSummary(tie) {
+    return new Promise(res => {
+      const paint = () => {
+        const next = G.players[(G.dealer + 1) % G.players.length];
+        openModal(`
+          <p class="eyebrow">Round ${G.round} scores</p>
+          <h2>${tie ? 'Tied past 200. One more round!' : 'Round complete'}</h2>
+          ${scoreTableHTML(true)}
+          <p>Next round, <b>${esc(next.name)}</b> deals. The deck carries on from where it is; the discard pile is shuffled in only when it runs out.</p>
+          <div class="sheet-btns">
+            ${G.players.length < 10 ? '<button type="button" class="btn" id="add-mid">+ Add a bot</button>' : ''}
+            <button type="button" class="btn primary" id="next-round">Next round</button>
+          </div>`);
+        $('#next-round').focus();
+      };
+      paint();
+      $('#sheet').onclick = e => {
+        if (e.target.id === 'next-round') { closeModal(); res(); }
+        if (e.target.id === 'add-mid' && G.players.length < 10) {
+          const name = nextBotName(G.players);
+          const style = Object.keys(STYLES)[G.players.length % 3];
+          G.players.push({ id: G.players.length, name, bot: true, style, total: 0, last: 0, ...blankRound() });
+          seats.push({ name, bot: true, style });
+          addLog(`${nm(G.players[G.players.length - 1])} joins the table with 0 points.`);
+          render();
+          const handler = $('#sheet').onclick;
+          paint();
+          $('#sheet').onclick = handler;
+        }
+      };
+    });
+  }
+
+  function showWinner(w) {
+    G.phase = 'over';
+    renderBar();
+    $('#bar-info').innerHTML = `<strong>${esc(w.name)} wins</strong><span>${w.total} points</span>`;
+    banner('Winner!');
+    openModal(`
+      <p class="eyebrow">Game over after ${G.round} round${G.round > 1 ? 's' : ''}</p>
+      <div class="winner-name">${esc(w.name)}</div>
+      <h2>wins with ${w.total} points</h2>
+      ${scoreTableHTML(false)}
+      <div class="sheet-btns">
+        <button type="button" class="btn" id="to-setup">Change seats</button>
+        <button type="button" class="btn primary" id="rematch">Rematch</button>
+      </div>`);
+    $('#rematch').focus();
+    $('#sheet').onclick = e => {
+      if (e.target.id === 'rematch') newGame();
+      if (e.target.id === 'to-setup') toSetup();
+    };
+  }
+
+  function toSetup() {
+    if (G) G.id++; // stops the running game loop
+    closeModal();
+    $('#game').hidden = true;
+    $('#bar').hidden = true;
+    $('#setup').hidden = false;
+    renderSetup();
+    window.scrollTo(0, 0);
+  }
+
+  function showRules() {
+    const prev = $('#modal').hidden ? null : { html: $('#sheet').innerHTML, click: $('#sheet').onclick };
+    const ex = (c) => cardHTML(c);
+    openModal(`
+      <p class="eyebrow">How to play</p>
+      <h2>Flip 7 in two minutes</h2>
+      <div class="rules">
+        <section><h3>Goal</h3><ul>
+          <li>Be the first to reach <b>200 points</b>. Scores are checked at the end of each round; if several players pass 200, the highest total wins.</li>
+        </ul></section>
+        <section><h3>The deck: 94 cards</h3><ul>
+          <li>Number cards 0 to 12. Each number appears as many times as its value (twelve 12s, one 1), plus a single 0.</li>
+          <li>6 modifiers: +2, +4, +6, +8, +10 and ×2.</li>
+          <li>9 actions: 3 Freeze, 3 Flip Three, 3 Second Chance.</li>
+        </ul>
+        <div class="demo">${ex({ t: 'num', v: 12 })}${ex({ t: 'num', v: 7 })}${ex({ t: 'num', v: 0 })}${ex({ t: 'mod', v: 6 })}${ex({ t: 'mod', x2: true })}${ex({ t: 'act', a: 'freeze' })}${ex({ t: 'act', a: 'flip3' })}${ex({ t: 'act', a: 'second' })}</div></section>
+        <section><h3>A round</h3><ul>
+          <li>The dealer gives each player one card face up. Action cards dealt now are played straight away.</li>
+          <li>On your turn, <b>Flip</b> one more card or <b>Stay</b> to bank what you have. Stayed players sit out the rest of the round.</li>
+          <li>Flip a number you already have and you <b>bust</b>: 0 points this round.</li>
+          <li>Collect <b>seven different numbers</b> and you Flip 7: +15 points, and the round ends for everyone at once.</li>
+          <li>The round also ends when every player has stayed, busted or been frozen. The deal passes left.</li>
+        </ul></section>
+        <section><h3>Action cards</h3><ul>
+          <li><b>Freeze:</b> pick any active player, yourself included. They bank their points and are out of the round.</li>
+          <li><b>Flip Three:</b> pick any active player. They flip the next three cards one by one, stopping if they bust or Flip 7. Freeze or Flip Three cards found during it are played after the third card.</li>
+          <li><b>Second Chance:</b> keep it. If you flip a duplicate number, discard both cards and stay in. You may hold only one; an extra must go to another active player, or is discarded if nobody can take it.</li>
+        </ul></section>
+        <section><h3>Scoring</h3><ul>
+          <li>Add your number cards. A ×2 doubles that number total only.</li>
+          <li>Then add + modifiers, then +15 for a Flip 7.</li>
+          <li>Example: 3, 7, 9, 12 with ×2 and +4 = (31 × 2) + 4 = <b>66</b>.</li>
+        </ul></section>
+        <section><h3>The deck between rounds</h3><ul>
+          <li>Used cards go to the discard pile. The deck is not reshuffled each round; the discard pile becomes the new deck only when it runs out.</li>
+        </ul></section>
+      </div>
+      <div class="sheet-btns"><button type="button" class="btn primary" id="rules-close">Got it</button></div>`);
+    $('#rules-close').focus();
+    $('#sheet').onclick = e => {
+      if (e.target.id !== 'rules-close') return;
+      if (prev) { $('#sheet').innerHTML = prev.html; $('#sheet').onclick = prev.click; }
+      else closeModal();
+    };
+  }
+
+  function confirmQuit() {
+    if (!$('#modal').hidden) return;
+    openModal(`
+      <p class="eyebrow">Leave this game?</p>
+      <h2>Start a new table</h2>
+      <p>The current scores will be lost. You'll go back to seating, with the same players filled in.</p>
+      <div class="sheet-btns">
+        <button type="button" class="btn" id="stay-here">Keep playing</button>
+        <button type="button" class="btn primary" id="leave">Go to seating</button>
+      </div>`);
+    $('#stay-here').focus();
+    $('#sheet').onclick = e => {
+      if (e.target.id === 'stay-here') closeModal();
+      if (e.target.id === 'leave') toSetup();
+    };
+  }
+
+  /* ---------- Events ---------- */
+  function act(v) {
+    if (G && G.pending && $('#modal').hidden) G.pending.res(v);
+  }
+  $('#btn-hit').addEventListener('click', () => act('hit'));
+  $('#btn-stay').addEventListener('click', () => act('stay'));
+  document.addEventListener('keydown', e => {
+    if (!G || !G.pending || e.target.matches('input, select, textarea')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'f' || k === 'h') act('hit');
+    if (k === 's') act('stay');
+  });
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-rules]')) showRules();
+  });
+  $('#quit').addEventListener('click', confirmQuit);
+  $('#speed').addEventListener('change', e => { if (G) G.speed = +e.target.value; });
+  $('#table').addEventListener('click', e => {
+    const b = e.target.closest('[data-swap]');
+    if (!b || !G) return;
+    const p = G.players.find(o => o.id === +b.dataset.swap);
+    p.bot = !p.bot;
+    if (p.bot && !p.style) p.style = 'balanced';
+    const seat = seats[p.id];
+    if (seat) seat.bot = p.bot;
+    addLog(p.bot ? `A ${STYLES[p.style].toLowerCase()} bot takes over ${nm(p)}'s seat.` : `${nm(p)} is back in their seat.`);
+    // If it was this player's turn, let the bot decide right away.
+    if (p.bot && G.pending && G.pending.p === p) {
+      const pend = G.pending;
+      setTimeout(() => pend.res(botDecide(p)), 500);
+      G.pending = null;
+    }
+    render();
+  });
+
+  renderSetup();
+})();
+</script>
+</body><!--sk-->
+</html><!--sk-->
